@@ -5,7 +5,7 @@ from scipy.io import wavfile
 
 # Set up a couple default values
 sr  = 44100;    #Samplerate
-ch  = 1;        #Number of channels
+ch  = 1;     #Number of channels
 plt.ioff();
 plt.rcParams["figure.figsize"] = (14,4)
 
@@ -41,9 +41,10 @@ def repeater(signal,noise_amp,attenuation,gain):
         - it adds noise_amp
         - amplifies the entire signal
     '''
-    noise = np.random.uniform(-noise_amp,noise_amp,len(signal));
-    signal = signal*attenuation;
-    signal = signal + noise;
+    noise   = np.random.uniform(-noise_amp,noise_amp,len(signal));
+    noise   = np.array([ (x,) for x in noise]);
+    signal  = signal*attenuation;
+    signal  = signal + noise;
     return signal*gain;
 
 def digital_rectify(signal):
@@ -64,7 +65,7 @@ def analog_tx(signal,hops,noise_amp,attenuation,gain):
 
     
 def digital_tx(signal,hops,noise_amp,attenuation,gain):
-    print("Simulating analog transfer");
+    print("Simulating digital_tx transfer");
     for i in range(0,hops):
         signal = repeater(signal,noise_amp,attenuation,gain);
         digital_rectify(signal);
@@ -99,7 +100,23 @@ print("The SNR of the digital signal is :: %f dB"  %( SNR_calc(digital_signal,my
 
 # Set the transmission parameters
 hops,noise_amp,attenuation,gain = input("Enter the \n1. Number of hops in the line \n2. Noise added for each hop \n3. Attenuation for each hop \n4. Gain at each repeater").split();
-print(hops,noise_amp,attenuation,gain);
 
+## Simulate analog transmission
+
+analog_recvd = analog_tx(myrec,int(hops),float(noise_amp),float(attenuation),float(gain));
+print("The SNR of the analog signal is :: %f dB"  %( SNR_calc(analog_recvd,myrec)));
+sd.playrec(analog_recvd,sr,channels=ch)
+sd.wait()
+plt.plot(analog_recvd)
+plt.show()
+
+## Simulate digital transmission
+
+digital_recvd = digital_tx(myrec,int(hops),float(noise_amp),float(attenuation),float(gain));
+print("The SNR of the analog signal is :: %f dB"  %( SNR_calc(digital_recvd,myrec)));
+sd.playrec(digital_recvd,sr,channels=ch)
+sd.wait()
+plt.plot(digital_recvd)
+plt.show()
 
 
